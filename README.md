@@ -2,9 +2,6 @@
 
 # Google Test #
 
-[![Build Status](https://travis-ci.org/google/googletest.svg?branch=master)](https://travis-ci.org/google/googletest)
-[![Build status](https://ci.appveyor.com/api/projects/status/4o38plt0xbo1ubc8/branch/master?svg=true)](https://ci.appveyor.com/project/BillyDonahue/googletest/branch/master)
-
 Welcome to **Google Test**, Google's C++ test framework!
 
 This repository is a merger of the formerly separate GoogleTest and
