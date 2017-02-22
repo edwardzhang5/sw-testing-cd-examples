@@ -12,8 +12,7 @@ function titleCased(title) {
 
   // capitalize characters after hyphen
   title = title.replace(/(-.)/g, (x) => {
-    const newString = '-' + x[1].toUpperCase();
-    return newString;
+    return '-' + x[1].toUpperCase();
   });
 
   // create array of words then map over to uppercase the first letter as needed
