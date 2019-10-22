@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
+	"strconv"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -26,6 +29,7 @@ type BMI struct {
 	HFeet     float64 `json:"height_feet"`
 	HInches   float64 `json:"height_inches"`
 	Weight    float64 `json:"weight"`
+	BMI       float64 `json:"bmi"`
 	BMIResult string  `json:"bmi_result"`
 	TimeStamp string  `json:"time_stamp"`
 }
@@ -71,41 +75,24 @@ func BMIInterface(c *mongo.Client) error {
 	}
 
 	bmiCat := BMICategory(bmi)
-	bmiResult := ""
 
 	fmt.Printf("BMI = %.2f\n", bmi)
-	switch bmiCat {
-	case Underweight:
-		bmiResult = "Underweight: BMW < 18.5"
-		fmt.Println(bmiResult)
-	case Normal:
-		bmiResult = "Normal weight: BMI 18.5–24.99 "
-		fmt.Println(bmiResult)
-	case Overweight:
-		bmiResult = "Overweight: BMI 25.0-29.99 "
-		fmt.Println(bmiResult)
-	case Obese:
-		bmiResult = "Obese: BMI of 30 or greater"
-		fmt.Println(bmiResult)
-	case Unknown:
-		fmt.Println("Unable to determine BMI Category")
-	}
-
+	fmt.Println(getBMIMessage(bmiCat))
 	// write to DB
 	bmiData := BMI{
 		HFeet:     hFeet,
 		HInches:   hInches,
 		Weight:    pWeight,
-		BMIResult: bmiResult,
+		BMI:       bmi,
+		BMIResult: getBMIMessage(bmiCat),
 		TimeStamp: BuildTimeStamp(time.Now()),
 	}
 
-	collection := c.Database("swtest").Collection("bmi")
-	_, err = collection.InsertOne(context.Background(), bmiData)
+	err = WriteBMIData(c, bmiData)
+
 	if err != nil {
 		log.Fatalf("Could not write data: %+v\n to DB with err: %v", bmiData, err)
 	}
-
 	return nil
 }
 
@@ -119,6 +106,24 @@ func CalculateBMI(feet, inches, pounds float64) (float64, error) {
 	mHeight := MetersHeightFromInches(InchesHeight(feet, inches))
 	mHSquared := Squared(mHeight)
 	return mWeight / mHSquared, nil
+}
+
+func getBMIMessage(bmiCat BCat) string {
+	bmiResult := ""
+	switch bmiCat {
+	case Underweight:
+		bmiResult = "Underweight: BMW < 18.5"
+	case Normal:
+		bmiResult = "Normal weight: BMI 18.5–24.99 "
+	case Overweight:
+		bmiResult = "Overweight: BMI 25.0-29.99 "
+	case Obese:
+		bmiResult = "Obese: BMI of 30 or greater"
+	case Unknown:
+		bmiResult = "Unable to determine BMI Category"
+	}
+	return bmiResult
+
 }
 
 // InchesHeight returns height in inches given ft + in
@@ -146,6 +151,15 @@ func BMICategory(bmi float64) BCat {
 	return Unknown
 }
 
+// WriteBMIData writes the data to the database
+func WriteBMIData(c *mongo.Client, bmi BMI) error {
+	var err error
+	collection := c.Database("swtest").Collection("bmi")
+	_, err = collection.InsertOne(context.Background(), bmi)
+
+	return err
+}
+
 // GetBMIEntries returns a slice of the retire data entries from the DB
 func GetBMIEntries(c *mongo.Client) []BMI {
 	var be []BMI
@@ -170,6 +184,38 @@ func GetBMIEntries(c *mongo.Client) []BMI {
 	}
 
 	return be
+}
+
+// BMIEndpoint returns all BMI entries as JSON
+func (dbh *DBHandler) BMIEndpoint(c *gin.Context) {
+	c.JSON(http.StatusOK, GetBMIEntries(dbh.Client))
+}
+
+// BMIHandler handles the BMI Request
+func (dbh *DBHandler) BMIHandler(c *gin.Context) {
+	var err error
+	feet, _ := strconv.ParseFloat(c.Param("feet"), 64)
+	inches, _ := strconv.ParseFloat(c.Param("inches"), 64)
+	weight, _ := strconv.ParseFloat(c.Param("weight"), 64)
+
+	bmi, _ := CalculateBMI(feet, inches, weight)
+
+	bmiData := BMI{
+		HFeet:     feet,
+		HInches:   inches,
+		Weight:    weight,
+		BMI:       bmi,
+		BMIResult: getBMIMessage(BMICategory(bmi)),
+		TimeStamp: BuildTimeStamp(time.Now()),
+	}
+
+	err = WriteBMIData(dbh.Client, bmiData)
+
+	if err != nil {
+		c.Error(err)
+	}
+
+	c.JSON(http.StatusOK, bmiData)
 }
 
 // https://www.nhlbi.nih.gov/health/educational/lose_wt/BMI/bmicalc.htm

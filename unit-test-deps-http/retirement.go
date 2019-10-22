@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
+	"strconv"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -48,54 +51,93 @@ func RetirementInterface(c *mongo.Client) {
 	yearlySavings := YearlySavings(pSaved, aSalary)
 	fmt.Println("Yearly Savings:", yearlySavings)
 
-	retire, rAge := CalculateRetirement(cAge, yearlySavings, sGoal)
-	fmt.Println(BuildTimeStamp(time.Now()))
+	rAge, message := CalculateRetirement(cAge, yearlySavings, sGoal)
 
 	retData := RetData{
 		Goal:         sGoal,
 		PercentSaved: pSaved,
 		RetireAge:    rAge,
 		CurrentAge:   cAge,
+		Salary:       aSalary,
 		YearlySaved:  yearlySavings,
+		Message:      message,
 		TimeStamp:    BuildTimeStamp(time.Now()),
 	}
 
-	if retire {
-		mes := fmt.Sprintf("Goal of %v reached at age: %v\n", sGoal, rAge)
-		retData.Message = mes
-		fmt.Println(mes)
-		fmt.Println("")
-	} else {
-		mes := "Sorry, according to our calculations (dead > 100), you'll be dead before you reach your goal"
-		fmt.Println(mes)
-		retData.Message = mes
-		fmt.Println("")
-	}
-	collection := c.Database("swtest").Collection("retire")
-	_, err = collection.InsertOne(context.Background(), retData)
+	err = WriteRetireData(c, retData)
 	if err != nil {
 		log.Fatalf("Could not write data: %+v\n to DB with err: %v", retData, err)
 	}
+	fmt.Println(message)
 }
 
 // CalculateRetirement determines age of desired savings goal whether
 // it's reached given a persons age, yearly savings and savings goal
-func CalculateRetirement(age int, ySavings, sGoal float64) (bool, int) {
+func CalculateRetirement(age int, ySavings, sGoal float64) (int, string) {
 	var savings float64
-	for age <= 100 {
+	var message string
+	for age < 100 {
 		savings += ySavings
 		age++
 		if savings >= sGoal {
-			return true, age
+			message = fmt.Sprintf("Goal of %v reached at age: %v\n", sGoal, age)
+			return age, message
 		}
 	}
-	return false, 0
+	message = "Sorry, according to our calculations (dead > 100), you'll be dead before you reach your goal"
+	return 0, message
+
 }
 
 // YearlySavings returns projected yearly savings given percent saved and annual salary
 func YearlySavings(pSaved, annSalary float64) float64 {
 	pSaved = pSaved / 100
 	return (annSalary * pSaved) * 2
+}
+
+// WriteRetireData writes the data to the database
+func WriteRetireData(c *mongo.Client, ret RetData) error {
+	var err error
+	collection := c.Database("swtest").Collection("retire")
+	_, err = collection.InsertOne(context.Background(), ret)
+
+	return err
+}
+
+// RetireEndpoint returns all Retirement entries
+func (dbh *DBHandler) RetireEndpoint(c *gin.Context) {
+	c.JSON(http.StatusOK, GetRetirementEntries(dbh.Client))
+}
+
+// RetireHandler handles the Retirement http input request
+func (dbh *DBHandler) RetireHandler(c *gin.Context) {
+	var err error
+	savingsGoal, _ := strconv.ParseFloat(c.Query("sGoal"), 64)
+	currentAge, _ := strconv.Atoi(c.Query("cAge"))
+	annualSalary, _ := strconv.ParseFloat(c.Query("aSalary"), 64)
+	percentSaved, _ := strconv.ParseFloat(c.Query("pSaved"), 64)
+	yearlySavings := YearlySavings(percentSaved, annualSalary)
+
+	rAge, message := CalculateRetirement(currentAge, yearlySavings, savingsGoal)
+
+	retData := RetData{
+		Goal:         savingsGoal,
+		PercentSaved: percentSaved,
+		RetireAge:    rAge,
+		CurrentAge:   currentAge,
+		Salary:       annualSalary,
+		YearlySaved:  yearlySavings,
+		Message:      message,
+		TimeStamp:    BuildTimeStamp(time.Now()),
+	}
+
+	err = WriteRetireData(dbh.Client, retData)
+
+	if err != nil {
+		c.Error(err)
+	}
+
+	c.JSON(http.StatusOK, retData)
 }
 
 // GetRetirementEntries returns a slice of the retire data entries from the DB

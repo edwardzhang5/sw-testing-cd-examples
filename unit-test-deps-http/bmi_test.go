@@ -1,6 +1,11 @@
 package main_test
 
 import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/sw-testing-cd/unit-test-deps-http"
@@ -34,6 +39,23 @@ var _ = Describe("BMI Function", func() {
 			Expect(err).Should(HaveOccurred())
 			_, err = CalculateBMI(5, 5, -500)
 			Expect(err).Should(HaveOccurred())
+		})
+	})
+
+	Context("BMIHandler should support access via http GET requests", func() {
+		It("should calculate the BMI given the correct url string", func() {
+			router := SetupRouter()
+			w := httptest.NewRecorder()
+			req, err := http.NewRequest("GET", "/bmi/6/0/170", nil)
+			if err != nil {
+				Fail("could not create request: " + err.Error())
+			}
+
+			var results map[string]interface{}
+			router.ServeHTTP(w, req)
+			json.NewDecoder(w.Body).Decode(&results)
+
+			fmt.Printf("RESULTS, %+v BODY: %+v\n", results, w.Body)
 		})
 	})
 })

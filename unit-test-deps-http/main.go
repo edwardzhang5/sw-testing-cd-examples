@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"time"
 
@@ -14,22 +15,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
+// DBHandler persists the mongo client for use in Handlers
+type DBHandler struct {
+	Client *mongo.Client
+}
+
 func main() {
-	// Disable Console Color, you don't need console color when writing the logs to file.
-	gin.DisableConsoleColor()
-
-	// Logging to a file.
-	f, _ := os.Create("gin.log")
-	gin.DefaultWriter = io.MultiWriter(f)
-
-	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-	go r.Run()
-
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
 	if err != nil {
@@ -41,7 +32,17 @@ func main() {
 		fmt.Println("Could not Ping the DB")
 		panic(err)
 	}
-	// time.Sleep(2 * time.Second)
+
+	var dbh DBHandler
+	dbh.Client = client
+
+	// Logging to a file.
+	f, _ := os.Create("gin.log")
+	gin.DefaultWriter = io.MultiWriter(f)
+
+	r := SetupRouter(&dbh)
+	go r.Run(":5000")
+
 	for {
 		fmt.Println("Welcome to the HPC Platform")
 		fmt.Println("Enter Your Selection Below (1, 2, 3, 4)")
@@ -75,6 +76,24 @@ func main() {
 			os.Exit(0)
 		}
 	}
+}
+
+// SetupRouter gets the gin router for app and testing
+func SetupRouter(dbh *DBHandler) *gin.Engine {
+	r := gin.Default()
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "pong",
+		})
+	})
+	r.GET("/", func(c *gin.Context) {
+		c.String(http.StatusOK, "SW Testing")
+	})
+	r.GET("/bmi/:feet/:inches/:weight", dbh.BMIHandler)
+	r.GET("/bmidata", dbh.BMIEndpoint)
+	r.GET("/retiredata", dbh.RetireEndpoint)
+	r.GET("/retire", dbh.RetireHandler)
+	return r
 }
 
 // Check panic if error is present

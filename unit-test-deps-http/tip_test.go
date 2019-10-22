@@ -2,7 +2,6 @@ package main_test
 
 import (
 	"log"
-	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -34,10 +33,3 @@ var _ = Describe("Split the Tip", func() {
 
 	})
 })
-
-func TestDollarDecimals(t *testing.T) {
-	splits, err := SplitTip(3.3, 3)
-	if err == nil {
-		t.Fatalf("Should error for more than 2 decimals in dollar amount %#v", splits)
-	}
-}
