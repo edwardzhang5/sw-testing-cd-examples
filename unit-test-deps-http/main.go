@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,31 +9,30 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"github.com/globalsign/mgo"
+	log "github.com/sirupsen/logrus"
 )
 
 // DBHandler persists the mongo client for use in Handlers
 type DBHandler struct {
-	Client *mongo.Client
+	Session *mgo.Session
 }
 
 func main() {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	session, err := mgo.Dial("localhost:27017")
 	if err != nil {
-		fmt.Println("Unable to Connect")
+		log.Fatal("Unable to Connect to Mongo instance")
 		panic(err)
-	}
-	err = client.Ping(ctx, readpref.Primary())
+  }
+  defer session.Close()
+	err = session.Ping()
 	if err != nil {
-		fmt.Println("Could not Ping the DB")
+		log.Fatal("Could not Ping the DB")
 		panic(err)
 	}
 
 	var dbh DBHandler
-	dbh.Client = client
+	dbh.Session = session
 
 	// Logging to a file.
 	f, _ := os.Create("gin.log")
@@ -60,9 +58,9 @@ func main() {
 
 		switch choice {
 		case '1':
-			_ = BMIInterface(client)
+			_ = BMIInterface(session)
 		case '2':
-			RetirementInterface(client)
+			RetirementInterface(session)
 		case '3':
 			_ = DistanceInterface()
 		case '4':
@@ -91,8 +89,8 @@ func SetupRouter(dbh *DBHandler) *gin.Engine {
 	})
 	r.GET("/bmi/:feet/:inches/:weight", dbh.BMIHandler)
 	r.GET("/bmidata", dbh.BMIEndpoint)
-	r.GET("/retiredata", dbh.RetireEndpoint)
 	r.GET("/retire", dbh.RetireHandler)
+	r.GET("/retiredata", dbh.RetireEndpoint)
 	return r
 }
 

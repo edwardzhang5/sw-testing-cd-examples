@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,13 +8,13 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
+	"github.com/globalsign/mgo"
 )
 
 var aSalary, pSaved, sGoal float64
 var cAge int
 
+// RetData containes retirement data entry
 type RetData struct {
 	CurrentAge   int     `json:"current_age"`
 	RetireAge    int     `json:"retire_age"`
@@ -28,7 +27,7 @@ type RetData struct {
 }
 
 // RetirementInterface gets user input and provides output
-func RetirementInterface(c *mongo.Client) {
+func RetirementInterface(c *mgo.Session) {
 	var err error
 
 	fmt.Println("**PRIOR Entries from DB**")
@@ -96,17 +95,17 @@ func YearlySavings(pSaved, annSalary float64) float64 {
 }
 
 // WriteRetireData writes the data to the database
-func WriteRetireData(c *mongo.Client, ret RetData) error {
+func WriteRetireData(c *mgo.Session, ret RetData) error {
 	var err error
-	collection := c.Database("swtest").Collection("retire")
-	_, err = collection.InsertOne(context.Background(), ret)
+	collection := c.DB("swtest").C("retire")
+	err = collection.Insert(ret)
 
 	return err
 }
 
 // RetireEndpoint returns all Retirement entries
 func (dbh *DBHandler) RetireEndpoint(c *gin.Context) {
-	c.JSON(http.StatusOK, GetRetirementEntries(dbh.Client))
+	c.JSON(http.StatusOK, GetRetirementEntries(dbh.Session))
 }
 
 // RetireHandler handles the Retirement http input request
@@ -131,7 +130,7 @@ func (dbh *DBHandler) RetireHandler(c *gin.Context) {
 		TimeStamp:    BuildTimeStamp(time.Now()),
 	}
 
-	err = WriteRetireData(dbh.Client, retData)
+	err = WriteRetireData(dbh.Session, retData)
 
 	if err != nil {
 		c.Error(err)
@@ -141,27 +140,12 @@ func (dbh *DBHandler) RetireHandler(c *gin.Context) {
 }
 
 // GetRetirementEntries returns a slice of the retire data entries from the DB
-func GetRetirementEntries(c *mongo.Client) []RetData {
+func GetRetirementEntries(c *mgo.Session) []RetData {
 	var re []RetData
-	collection := c.Database("swtest").Collection("retire")
-	ctx := context.Background()
-	cur, err := collection.Find(ctx, bson.D{})
+	collection := c.DB("swtest").C("retire")
+	err := collection.Find(nil).All(&re)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Could not parse Retire data: %+v", err)
 	}
-	defer cur.Close(ctx)
-	for cur.Next(ctx) {
-		var retRes RetData
-		err := cur.Decode(&retRes)
-		if err != nil {
-			log.Fatalf("Could not get Retirement data: %v", err)
-		}
-
-		re = append(re, retRes)
-	}
-	if err := cur.Err(); err != nil {
-		log.Fatalf("Could not get Retirement data: %v", err)
-	}
-
 	return re
 }
