@@ -43,7 +43,7 @@ type Collection interface {
 	Insert(docs ...interface{}) error
 	Remove(selector interface{}) error
 	Update(selector interface{}, update interface{}) error
-	GetMyDocuments() ([]interface{}, error)
+	GetDBEntries() ([]interface{}, error)
 }
 
 // MongoDatabase wraps a mgo.Database to embed methods in models.
@@ -56,8 +56,8 @@ func (d MongoDatabase) C(name string) Collection {
 	return &MongoCollection{Collection: d.Database.C(name)}
 }
 
-// GetMyDocuments returns all scores.
-func (c *MongoCollection) GetMyDocuments() ([]interface{}, error) {
+// GetDBEntries returns all scores.
+func (c *MongoCollection) GetDBEntries() ([]interface{}, error) {
 	var documents []interface{}
 	err := c.Find(bson.M{}).All(&documents)
 	if err != nil {

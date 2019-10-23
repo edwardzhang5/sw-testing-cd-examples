@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
-	"os"
 )
 
 // MockSession satisfies Session and act as a mock of *mgo.session.
@@ -59,14 +58,12 @@ func (fc MockCollection) Update(selector interface{}, update interface{}) error 
 	return nil
 }
 
-// GetMyDocuments mock.
-func (fc MockCollection) GetMyDocuments() ([]interface{}, error) {
-	var documents []interface{}
-	content, _ := ioutil.ReadFile(
-		os.Getenv("GOPATH") + "/src/github.com/thylong/mongo_mock_go_example/model/fixtures.json")
-	json.Unmarshal(content, &documents)
-
-	return documents, nil
+// GetDBEntries mock.
+func (fc MockCollection) GetDBEntries() ([]interface{}, error) {
+	var entries []interface{}
+	content, _ := ioutil.ReadFile("fixtures.json")
+	json.Unmarshal(content, &entries)
+	return entries, nil
 }
 
 // MockQuery satisfies Query and act as a mock.

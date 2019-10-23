@@ -1,0 +1,14 @@
+[
+  {
+      "testdata1": "software testing",
+      "arraydata": [0, 5]
+  },
+  {
+      "stringdata": "Hello world 2",
+      "array": [0, 1, 2, 3]
+  },
+  {
+      "string": "here is a string",
+      "numberdata": 3
+  }
+]

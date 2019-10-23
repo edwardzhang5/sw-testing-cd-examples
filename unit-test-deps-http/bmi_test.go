@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -56,6 +57,23 @@ var _ = Describe("BMI Function", func() {
 			json.NewDecoder(w.Body).Decode(&results)
 
 			fmt.Printf("RESULTS, %+v BODY: %+v\n", results, w.Body)
+			bmi, _ := strconv.ParseFloat(fmt.Sprintf("%v", results["bmi"]), 64)
+			fmt.Println("WCODE------", w.Code)
+
+			Expect(bmi).Should(BeNumerically("<", 24.99))
+			Expect(bmi).Should(BeNumerically(">", 18.5))
+
+		})
+		It("should return StatusOK (200) for request to correct endpoint", func() {
+			router := SetupRouter(&MDBHandler)
+			w := httptest.NewRecorder()
+			req, err := http.NewRequest("GET", "/bmi/6/0/170", nil)
+			if err != nil {
+				Fail("could not create request: " + err.Error())
+			}
+			router.ServeHTTP(w, req)
+
+			Expect(w.Code).To(Equal(http.StatusOK))
 		})
 	})
 })

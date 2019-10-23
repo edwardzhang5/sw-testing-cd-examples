@@ -178,9 +178,18 @@ func (dbh *DBHandler) BMIEndpoint(c *gin.Context) {
 // BMIHandler handles the BMI Request
 func (dbh *DBHandler) BMIHandler(c *gin.Context) {
 	var err error
-	feet, _ := strconv.ParseFloat(c.Param("feet"), 64)
-	inches, _ := strconv.ParseFloat(c.Param("inches"), 64)
-	weight, _ := strconv.ParseFloat(c.Param("weight"), 64)
+	feet, err := strconv.ParseFloat(c.Param("feet"), 64)
+	if err != nil {
+		c.Error(err)
+	}
+  inches, err := strconv.ParseFloat(c.Param("inches"), 64)
+  if err != nil {
+		c.Error(err)
+	}
+  weight, err := strconv.ParseFloat(c.Param("weight"), 64)
+  if err != nil {
+		c.Error(err)
+	}
 
 	bmi, _ := CalculateBMI(feet, inches, weight)
 
