@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/globalsign/mgo"
 )
 
 var aSalary, pSaved, sGoal float64
@@ -27,7 +26,7 @@ type RetData struct {
 }
 
 // RetirementInterface gets user input and provides output
-func RetirementInterface(c *mgo.Session) {
+func RetirementInterface(c Session) {
 	var err error
 
 	fmt.Println("**PRIOR Entries from DB**")
@@ -95,7 +94,7 @@ func YearlySavings(pSaved, annSalary float64) float64 {
 }
 
 // WriteRetireData writes the data to the database
-func WriteRetireData(c *mgo.Session, ret RetData) error {
+func WriteRetireData(c Session, ret RetData) error {
 	var err error
 	collection := c.DB("swtest").C("retire")
 	err = collection.Insert(ret)
@@ -140,7 +139,7 @@ func (dbh *DBHandler) RetireHandler(c *gin.Context) {
 }
 
 // GetRetirementEntries returns a slice of the retire data entries from the DB
-func GetRetirementEntries(c *mgo.Session) []RetData {
+func GetRetirementEntries(c Session) []RetData {
 	var re []RetData
 	collection := c.DB("swtest").C("retire")
 	err := collection.Find(nil).All(&re)

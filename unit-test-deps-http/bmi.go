@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/globalsign/mgo"
+	// mgo "github.com/globalsign/mgo"
 )
 
 //BCat enum values for BMI Category
@@ -34,7 +34,7 @@ type BMI struct {
 }
 
 // BMIInterface gets user input and runs function
-func BMIInterface(c *mgo.Session) error {
+func BMIInterface(c Session) error {
 	var hFeet, hInches, pWeight float64
 	var err error
 
@@ -151,7 +151,7 @@ func BMICategory(bmi float64) BCat {
 }
 
 // WriteBMIData writes the data to the database
-func WriteBMIData(c *mgo.Session, bmi BMI) error {
+func WriteBMIData(c Session, bmi BMI) error {
 	var err error
 	collection := c.DB("swtest").C("bmi")
 	err = collection.Insert(bmi)
@@ -160,7 +160,7 @@ func WriteBMIData(c *mgo.Session, bmi BMI) error {
 }
 
 // GetBMIEntries returns a slice of the retire data entries from the DB
-func GetBMIEntries(c *mgo.Session) []BMI {
+func GetBMIEntries(c Session) []BMI {
 	var be []BMI
 	collection := c.DB("swtest").C("bmi")
 	err := collection.Find(nil).All(&be)

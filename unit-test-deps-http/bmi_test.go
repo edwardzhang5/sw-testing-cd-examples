@@ -44,7 +44,7 @@ var _ = Describe("BMI Function", func() {
 
 	Context("BMIHandler should support access via http GET requests", func() {
 		It("should calculate the BMI given the correct url string", func() {
-			router := SetupRouter()
+			router := SetupRouter(&MDBHandler)
 			w := httptest.NewRecorder()
 			req, err := http.NewRequest("GET", "/bmi/6/0/170", nil)
 			if err != nil {

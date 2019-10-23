@@ -9,27 +9,20 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/globalsign/mgo"
+	mgo "github.com/globalsign/mgo"
 	log "github.com/sirupsen/logrus"
 )
 
+const mongoURL = "localhost:27017"
+
 // DBHandler persists the mongo client for use in Handlers
 type DBHandler struct {
-	Session *mgo.Session
+	Session
 }
 
 func main() {
-	session, err := mgo.Dial("localhost:27017")
-	if err != nil {
-		log.Fatal("Unable to Connect to Mongo instance")
-		panic(err)
-  }
-  defer session.Close()
-	err = session.Ping()
-	if err != nil {
-		log.Fatal("Could not Ping the DB")
-		panic(err)
-	}
+	session := NewSession()
+	defer session.Close()
 
 	var dbh DBHandler
 	dbh.Session = session
@@ -92,6 +85,16 @@ func SetupRouter(dbh *DBHandler) *gin.Engine {
 	r.GET("/retire", dbh.RetireHandler)
 	r.GET("/retiredata", dbh.RetireEndpoint)
 	return r
+}
+
+// NewSession returns a new Mongo Session.
+func NewSession() Session {
+	mgoSession, err := mgo.Dial(mongoURL)
+	if err != nil {
+		log.Fatal("Unable to Connect to Mongo instance")
+		panic(err)
+	}
+	return MongoSession{mgoSession}
 }
 
 // Check panic if error is present

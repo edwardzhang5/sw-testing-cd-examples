@@ -14,7 +14,7 @@ var _ = Describe("Main", func() {
 	Context("Setup and test router and application connections", func() {
 
 		It("should properly setup router", func() {
-			router := SetupRouter()
+			router := SetupRouter(&MDBHandler)
 
 			w := httptest.NewRecorder()
 			req, _ := http.NewRequest("GET", "/", nil)
@@ -24,7 +24,7 @@ var _ = Describe("Main", func() {
 		})
 
 		It("should pass the ping test", func() {
-			router := SetupRouter()
+			router := SetupRouter(&MDBHandler)
 			var ping map[string]string
 
 			w := httptest.NewRecorder()
