@@ -18,9 +18,9 @@ var _ = Describe("Db", func() {
 
 	It("should retreive mocked database entries", func() {
 		var correctData bool
-    documents, _ := session.DB("test").C("other_test").GetDBEntries()
+		documents, _ := session.DB("test").C("other_test").GetDBEntries()
 		for _, m := range documents {
-      mapData := m.(map[string]interface{})
+			mapData := m.(map[string]interface{})
 			if val, ok := mapData["testdata1"]; ok {
 				if val == "software testing" {
 					correctData = true
