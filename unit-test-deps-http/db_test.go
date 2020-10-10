@@ -16,7 +16,7 @@ var _ = Describe("Db", func() {
 		Expect(len(documents)).Should(BeNumerically(">", 0))
 	})
 
-	It("should retreive mocked database entries", func() {
+	It("should retrieve mocked database entries", func() {
 		var correctData bool
 		documents, _ := session.DB("test").C("other_test").GetDBEntries()
 		for _, m := range documents {

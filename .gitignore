@@ -62,3 +62,6 @@ _testmain.go
 *.exe
 *.test
 *.prof
+jwt-client/jwt-client
+
+unit-test-deps-http/unit-test-deps-http
