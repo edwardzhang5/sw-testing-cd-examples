@@ -65,3 +65,5 @@ _testmain.go
 jwt-client/jwt-client
 
 unit-test-deps-http/unit-test-deps-http
+
+titlecase-server/.idea/

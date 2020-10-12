@@ -11,7 +11,7 @@ import (
 	// mgo "github.com/globalsign/mgo"
 )
 
-//BCat enum values for BMI Category
+// BCat enum values for BMI Category
 type BCat int
 
 // category constants

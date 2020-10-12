@@ -16,13 +16,12 @@ describe('server tests', () => {
       });
   });
 
-  it('provied titlecase title for post request', done => {
+  it('provide titlecase title for post request', done => {
     request(app)
       .post('/movietitle')
       .type('form')
       .send({ title: 'movie title' })
       .then(res => {
-        console.log(res.body);
         expect(res.body).toHaveProperty('title', 'Movie Title');
         done();
       });
