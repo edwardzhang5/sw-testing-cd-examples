@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const mongoURL = "localhost:27017"
+const mongoURL = "mongodb:27017"
 
 // DBHandler persists the mongo client for use in Handlers
 type DBHandler struct {
@@ -89,7 +89,12 @@ func SetupRouter(dbh *DBHandler) *gin.Engine {
 
 // NewSession returns a new Mongo Session.
 func NewSession() Session {
-	mgoSession, err := mgo.Dial(mongoURL)
+	fmt.Println("MONGOURL--------", mongoURL)
+	info := &mgo.DialInfo{
+		Addrs:   []string{mongoURL},
+		Timeout: 10 * time.Second,
+	}
+	mgoSession, err := mgo.DialWithInfo(info)
 	if err != nil {
 		log.Fatal("Unable to Connect to Mongo instance")
 		panic(err)

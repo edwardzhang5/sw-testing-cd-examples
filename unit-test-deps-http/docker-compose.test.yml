@@ -1,0 +1,30 @@
+version: "3.7"
+
+networks:
+  hpc-functions-network-test:
+    driver: bridge
+
+services:
+  int_tests:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.test
+    links:
+        - "mongodb:localhost"
+    depends_on:
+      - mongodb
+    networks:
+      - hpc-functions-network-test
+  mongodb:
+    image: mongo:4.4.1-bionic
+    # container_name: mongodb
+    # environment:
+    #   MONGO_INITDB_ROOT_USERNAME: root
+    # MONGO_INITDB_ROOT_PASSWORD: rootpassword
+    ports:
+      - 27017:27017
+    restart: on-failure
+    networks:
+      - hpc-functions-network-test
+
+

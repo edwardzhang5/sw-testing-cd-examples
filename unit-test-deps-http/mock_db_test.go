@@ -6,8 +6,8 @@ import (
 	. "github.com/sw-testing-cd/unit-test-deps-http"
 )
 
-var session Session
 var _ = Describe("Db", func() {
+	var session Session
 	BeforeEach(func() {
 		session = NewMockSession()
 	})
