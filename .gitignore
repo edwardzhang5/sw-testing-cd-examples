@@ -68,3 +68,4 @@ unit-test-deps-http/unit-test-deps-http
 
 titlecase-server/.idea/
 .idea/
+.env

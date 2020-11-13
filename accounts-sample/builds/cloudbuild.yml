@@ -1,0 +1,29 @@
+steps:
+  - id: 'build project'
+    name: 'golang'
+    args: ['go', 'build', '.']
+  - id: 'generate token'
+    name: 'golang'
+    args:
+      - './tokenGenCI'
+      - '-g'
+      - '-team=2'
+      - '>'
+      - 'token.txt'
+    env:
+      - "BANK_KEY=PDqVdRHt94Mr4uHVznLxwaNCFgq45snpXYiPckaZcke"
+      - "AUDIENCE=staging.drbyron.io"
+  - id: 'run golangci lint'
+    name: 'golang'
+    args: ['./gcli.sh']
+  - id: 'run unit tests'
+    name: 'golang'
+    args: [ 'go', 'test', '-v', './...' ]
+  - id: 'run integration tests'
+    name: 'golang'
+    args: [ 'go', 'test', '-v', '--tags=integration', './service/...' ]
+  - id: 'deploy to staging'
+    name: 'gcr.io/cloud-builders/gcloud'
+    args: ['app', 'deploy', '--no-promote']
+    timeout: '1600s'
+timeout: 660s

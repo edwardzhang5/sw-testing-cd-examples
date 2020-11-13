@@ -1,0 +1,18 @@
+steps:
+  - id: 'build project'
+    name: 'golang'
+    args: ['go', 'build', '.']
+  - id: 'run golangci lint'
+    name: 'golang'
+    args: ['./gcli.sh']
+  - id: 'run unit tests'
+    name: 'golang'
+    args: [ 'go', 'test', '-v', './...' ]
+  - id: 'run integration tests'
+    name: 'golang'
+    args: [ 'go', 'test', '-v', '--tags=integration', './service/...' ]
+  - id: 'deploy to staging'
+    name: 'gcr.io/cloud-builders/gcloud'
+    args: ['app', 'deploy', '--no-promote']
+    timeout: '1600s'
+timeout: 660s

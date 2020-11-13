@@ -1,0 +1,6 @@
+runtime: go114
+
+env_variables:
+  PROJECT_ID: "sw-test-4-cd"
+  ENVIRONMENT: "production"
+  API_VERSION: "0.14.3"
