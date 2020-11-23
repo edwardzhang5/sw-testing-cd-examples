@@ -8,10 +8,10 @@
     "express": "^4.16.2",
     "jest": "^22.2.1",
     "lodash": "^4.17.5",
+    "nodemon": "^1.14.12",
     "prompt": "^1.0.0",
     "superagent": "^3.8.2",
-    "supertest": "^3.0.0",
-    "nodemon": "^1.14.12"
+    "supertest": "^3.0.0"
   },
   "jest": {
     "collectCoverage": true
