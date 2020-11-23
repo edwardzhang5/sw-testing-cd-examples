@@ -1,0 +1,14 @@
+#+TITLE: SW Testing HW #1 ReadME - Spring 2017 
+
+* Test Theory Types
+** TDD
+** Partition-based / Equivalence Classes
+** Boundary-based - EPC / Weak N+1
+** Path-based 
+
+* 
+  - ginkgo bootstrap // run tests
+  - ginkgo generate 'email'
+  - go test -coverprofile=coverage.out
+  - go tool cover -func=coverage.out
+  - go tool cover -html=coverage.out

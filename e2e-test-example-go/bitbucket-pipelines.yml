@@ -1,0 +1,52 @@
+# You can specify a custom docker image from Docker Hub as your build environment.
+image: golang:1.10
+
+pipelines:
+  default:
+    - step:
+        name: gcloud setup
+        # caches:
+        #   - gocache        # custom golang cache
+        #   - xchache        # custom golang cache
+          # - pkgincache     # custom golang cache
+        script:
+          - curl -o /tmp/google-cloud-sdk.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-198.0.0-linux-x86_64.tar.gz
+          - tar -xvf /tmp/google-cloud-sdk.tar.gz -C /tmp/
+          - /tmp/google-cloud-sdk/install.sh -q
+          - source /tmp/google-cloud-sdk/path.bash.inc
+          - gcloud -v
+          - gcloud components install app-engine-go
+          - echo $GCLOUD_API_KEYFILE | base64 --decode --ignore-garbage > ./gcloud-api-key.json
+          - gcloud auth activate-service-account --key-file gcloud-api-key.json
+          - gcloud config set project $GCLOUD_PROJECT
+          - PACKAGE_PATH="${GOPATH}/src/bitbucket.org/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}"
+          - mkdir -pv "${PACKAGE_PATH}"
+          - tar -cO --exclude-vcs --exclude=bitbucket-pipelines.yml . | tar -xv -C "${PACKAGE_PATH}"
+          - cd "${PACKAGE_PATH}"
+          - go get -v
+          - echo 'get testing tools'
+          - go get github.com/onsi/ginkgo # testing tools
+          - go get github.com/onsi/gomega # testing tools
+          - go vet -v # lint go code
+          - go build -v # build go code
+          - go test -v # run unit tests
+          - gcloud -q app deploy app.yaml --no-promote
+
+#    - step:
+        # image: node:9.11
+        # name: front-end tests
+        # caches:
+        #   - node
+        # script:
+        #   - cd $BITBUCKET_CLONE_DIR/vue-client-app
+        #   - ls -lah
+        #   - echo $PWD
+        #   - yarn
+        #   -
+        #   - cypress run
+
+# definitions:
+#   caches:
+#     gocache: ${GOPATH}/src/github.com
+#     xchache: ${GOPATH}/src/golang.org
+#     pkgincache: ${GOPATH}/src/gopkg.in
