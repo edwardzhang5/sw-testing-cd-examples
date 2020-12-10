@@ -1,0 +1,14 @@
+FROM golang:1.15-buster
+
+WORKDIR /app
+
+COPY vendor ./
+COPY *.* ./
+
+RUN go mod vendor
+RUN go build -mod vendor -o app
+
+EXPOSE 9090
+
+CMD ["./app"]
+

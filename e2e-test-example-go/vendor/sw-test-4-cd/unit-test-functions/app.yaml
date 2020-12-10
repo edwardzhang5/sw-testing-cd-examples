@@ -1,0 +1,10 @@
+runtime: go
+service: default
+api_version: go1
+
+skip_files:
+- .git/
+
+handlers:
+- url: /api/.*
+  script: _go_app

@@ -1,0 +1,14 @@
+module sw-test-4-cd/unit-test-functions
+
+go 1.12
+
+require (
+	github.com/gin-contrib/cors v1.3.0
+	github.com/gin-gonic/gin v1.4.0
+	github.com/onsi/ginkgo v1.10.1
+	github.com/onsi/gomega v1.7.0
+	github.com/shopspring/decimal v0.0.0-20190905144223-a36b5d85f337
+	google.golang.org/appengine v1.6.2 // indirect
+)
+
+replace sw-test-4-cd/unit-test-functions => ./

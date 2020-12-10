@@ -1,0 +1,28 @@
+version: "3.8"
+
+networks:
+  e2e-network:
+    driver: bridge
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.frontend
+    depends_on:
+      - backend
+    networks:
+      - e2e-network
+    ports:
+      - 8080:8080
+  backend:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.backend
+    ports:
+      - 9090:9090
+    networks:
+      - e2e-network
+
+
+
