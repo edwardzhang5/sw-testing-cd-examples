@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const mongoURL = "mongodb:27017"
+const mongoURL = "127.0.0.1:27017"
 
 // DBHandler persists the mongo client for use in Handlers
 type DBHandler struct {
